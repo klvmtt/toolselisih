@@ -1,34 +1,47 @@
+
 <!DOCTYPE html><html><head><meta charset="utf-8"><title>Compare Data</title>
 <style>
-body{font-family:Calibri;background:#f5f5f5;margin:20px}
-table{border-collapse:collapse}th,td{border:1px solid #bbb}th{background:#217346;color:#fff;padding:6px}
-input{border:none;padding:6px;width:140px}input[readonly]{background:#eee;cursor:pointer}
-.bad{background:#ffb3b3;animation:blink .8s infinite}.ok{background:#c8f7c5}
-@keyframes blink{50%{background:#fff}}
-</style></head><body>
-<table><thead><tr><th>User1</th><th>Nom1</th><th>User2</th><th>Nom2</th><th>Hasil</th></tr></thead><tbody id=b></tbody></table>
+body{font-family:Calibri}table{border-collapse:collapse}th,td{border:1px solid #bbb}
+th{background:#217346;color:#fff;padding:6px}input{border:none;padding:6px;width:140px}
+input[readonly]{background:#eee;cursor:pointer}.bad{background:#ffb3b3;animation:b .8s infinite}.ok{background:#c8f7c5}
+@keyframes b{50%{background:#fff}}
+</style></head><body><button onclick="filterData()" style="padding:10px 18px;margin:10px 0;background:#217346;color:#fff;border:none;border-radius:4px;cursor:pointer">FILTER A-Z & CEK DATA</button>
+<table><tr><th>User1</th><th>Nom1</th><th>User2</th><th>Nom2</th><th>Hasil</th><th>Nominal Hasil</th></tr><tbody id='tb'></tbody></table>
 <script>
-const b=document.getElementById('b');
-for(let i=0;i<500;i++){let tr=document.createElement('tr');
-for(let j=0;j<5;j++){let td=document.createElement('td'),inp=document.createElement('input');
-if(j==4){inp.readOnly=true;inp.onclick=()=>navigator.clipboard.writeText(inp.value);}
-inp.oninput=()=>{if(j<4)compare();}
-inp.onpaste=function(e){e.preventDefault();let d=e.clipboardData.getData('text').trim().split(/\r?\n/).map(x=>x.split(/\t/));
-let r=this.parentNode.parentNode.rowIndex-1,c=this.parentNode.cellIndex;
-d.forEach((row,k)=>{let t=b.rows[r+k];if(!t)return;row.forEach((v,m)=>{let cell=t.cells[c+m];if(cell)cell.firstChild.value=v;});});compare();}
-td.append(inp);tr.append(td);}b.append(tr);}
-function clean(s){return s.toLowerCase().replace(/\s+/g,'')}
-function compare(){
-let m=new Map();
-[...b.rows].forEach(r=>{let u=clean(r.cells[2].firstChild.value),n=r.cells[3].firstChild.value;if(u)m.set(u,{n,r})});
-[...b.rows].forEach(r=>{
+let tb=document.getElementById('tb');
+for(let i=0;i<500;i++){let tr=document.createElement('tr');for(let j=0;j<6;j++){let td=document.createElement('td'),x=document.createElement('input');if(j>=4){x.readOnly=true;x.onclick=()=>navigator.clipboard.writeText(x.value)}x.oninput=cmp;td.append(x);tr.append(td)}tb.append(tr)}
+function c(s){return s.toLowerCase().replace(/\s+/g,'')}
+function d(v){return (v+'').replace(/\D/g,'')}
+function cmp(){
+let map=new Map();
+[...tb.rows].forEach(r=>{if(c(r.cells[2].firstChild.value))map.set(c(r.cells[2].firstChild.value),r)});
+[...tb.rows].forEach(r=>{
 r.querySelectorAll('input').forEach(i=>i.className='');
-let u=clean(r.cells[0].firstChild.value),n=r.cells[1].firstChild.value,h=r.cells[4].firstChild;
-if(!u){h.value='';return;}
-if(!m.has(u)){h.value=u;r.cells[0].firstChild.className='bad';r.cells[1].firstChild.className='bad';return;}
-let o=m.get(u);
-if((n+'').replace(/\D/g,'')!=(o.n+'').replace(/\D/g,'')){h.value=u;r.cells[1].firstChild.className='bad';o.r.cells[3].firstChild.className='bad';}
-else{h.value='OK';h.className='ok';}
+let u=c(r.cells[0].firstChild.value),n=d(r.cells[1].firstChild.value);
+let h=r.cells[4].firstChild,hn=r.cells[5].firstChild;
+h.value='';hn.value='';
+if(!u)return;
+let rr=map.get(u);
+if(!rr){h.value=r.cells[0].firstChild.value;hn.value=r.cells[1].firstChild.value;r.cells[0].firstChild.className='bad';r.cells[1].firstChild.className='bad';return;}
+let n2=d(rr.cells[3].firstChild.value);
+if(n!=n2){h.value=r.cells[0].firstChild.value;hn.value=rr.cells[3].firstChild.value;r.cells[1].firstChild.className='bad';rr.cells[3].firstChild.className='bad';}
+else{h.value='OK';hn.value=rr.cells[3].firstChild.value;h.className='ok';hn.className='ok';}
 });
+}
+
+function filterData(){
+ let rows=[...tb.rows];
+ function sortPair(u,n){
+   let arr=rows.map(r=>({u:r.cells[u].firstChild.value.toLowerCase().trim(),nu:r.cells[u].firstChild.value,no:r.cells[n].firstChild.value}))
+               .filter(x=>x.u);
+   arr.sort((a,b)=>a.u.localeCompare(b.u));
+   rows.forEach((r,i)=>{
+      r.cells[u].firstChild.value=arr[i]?arr[i].nu:'';
+      r.cells[n].firstChild.value=arr[i]?arr[i].no:'';
+   });
+   cmp();
+}
+ sortPair(0,1);
+ sortPair(2,3);
 }
 </script></body></html>
