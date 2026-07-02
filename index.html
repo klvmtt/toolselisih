@@ -44,4 +44,26 @@ function filterData(){
  sortPair(0,1);
  sortPair(2,3);
 }
+
+document.querySelectorAll('#tb input').forEach(inp=>{
+inp.addEventListener('paste',function(e){
+e.preventDefault();
+const text=(e.clipboardData||window.clipboardData).getData('text').replace(/\r/g,'');
+const rows=text.split('\n').filter(r=>r.length);
+const startRow=this.parentNode.parentNode.rowIndex-1;
+const startCol=this.parentNode.cellIndex;
+rows.forEach((line,r)=>{
+ const cols=line.split('\t');
+ cols.forEach((val,c)=>{
+   const tr=tb.rows[startRow+r];
+   if(!tr)return;
+   const cell=tr.cells[startCol+c];
+   if(!cell)return;
+   cell.firstChild.value=val;
+ });
+});
+cmp();
+});
+});
+
 </script></body></html>
