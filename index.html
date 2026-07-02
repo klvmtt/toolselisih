@@ -1,23 +1,36 @@
-<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Compare Data</title>
+
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Compare Data Pro</title>
 <style>
-body{font-family:Calibri;margin:20px;background:#f5f5f5}
-button{padding:10px 18px;margin-bottom:10px}
-table{border-collapse:collapse;margin:auto}
-th,td{border:1px solid #ccc}
-th{background:#217346;color:#fff;padding:6px}
-input{width:140px;height:28px;border:none;text-align:center}
-.nom{width:100px}
+body{font-family:Arial;background:#f2f2f2;margin:20px}table{border-collapse:collapse}
+th,td{border:1px solid #bbb}th{background:#217346;color:#fff;padding:6px}
+input{border:none;padding:6px;width:150px;text-align:center}.ro{background:#eef}
+.bad{animation:blink .8s infinite}@keyframes blink{50%{background:#ff0000;color:#fff}}
+button{padding:8px 14px;margin:8px}
 </style></head><body>
 <button onclick="processData()">FILTER A-Z & CEK DATA</button>
-<table><thead><tr><th>User ID 1</th><th>Nominal 1</th><th>User ID 2</th><th>Nominal 2</th><th>Hasil</th><th>Nominal</th></tr></thead><tbody id="body"></tbody></table>
+<table><thead><tr><th>User1</th><th>Nom1</th><th>User2</th><th>Nom2</th><th>Hasil</th></tr></thead><tbody id=b></tbody></table>
 <script>
-const body=document.getElementById('body');
-for(let i=0;i<500;i++){let tr=document.createElement('tr');for(let j=0;j<6;j++){let td=document.createElement('td');let inp=document.createElement('input');if(j==1||j==3||j==5)inp.className='nom';
-inp.oninput=function(){if(j==1||j==3||j==5){let a=this.value.replace(/[^0-9]/g,'');this.value=a?Number(a).toLocaleString('en-US'):'';}}
-inp.addEventListener('paste',function(e){e.preventDefault();const data=e.clipboardData.getData('text').trim().split(/\r?\n/);const ri=this.closest('tr').rowIndex-1;const ci=this.closest('td').cellIndex;const trs=document.querySelectorAll('#body tr');data.forEach((v,k)=>{if(ri+k<trs.length){let t=trs[ri+k].querySelectorAll('input')[ci];t.value=v;t.dispatchEvent(new Event('input'));}});});
-td.appendChild(inp);tr.appendChild(td);}body.appendChild(tr);}
-function clean(s){return s.toLowerCase().replace(/\s+/g,'')}
-function num(s){return Number((s+'').replace(/[^0-9]/g,''))||0}
-function processData(){/* simplified */alert('Filter/compare logic dapat ditambahkan dari versi sebelumnya. Paste multi-baris sudah aktif.');}
+const b=document.getElementById('b');
+for(let i=0;i<500;i++){let tr=document.createElement('tr');
+for(let j=0;j<5;j++){let td=document.createElement('td'),x=document.createElement('input');
+if(j==4){x.readOnly=true;x.className='ro';x.onclick=()=>navigator.clipboard.writeText(x.value);}
+x.oninput=()=>{if(j==1||j==3){let n=x.value.replace(/\D/g,'');x.value=n?Number(n).toLocaleString('en-US'):''}}
+x.onpaste=e=>{e.preventDefault();let d=e.clipboardData.getData('text').trim().split(/\r?\n/).map(r=>r.split(/\t/));
+let r=tr.rowIndex-1,c=j;d.forEach((row,k)=>row.forEach((v,l)=>{let rr=b.rows[r+k];if(rr&&rr.cells[c+l]){let t=rr.cells[c+l].firstChild;t.value=v;t.dispatchEvent(new Event('input'));}}));}
+td.appendChild(x);tr.appendChild(td);}b.appendChild(tr);}
+function cl(s){return (s||'').toLowerCase().replace(/\s+/g,'')}
+function nm(s){return +(s+'').replace(/\D/g,'')||0}
+function processData(){
+[...b.rows].forEach(r=>[...r.querySelectorAll('input')].forEach(i=>i.classList.remove('bad')));
+[...b.rows].sort((a,c)=>cl(a.cells[0].firstChild.value).localeCompare(cl(c.cells[0].firstChild.value)))
+.forEach(r=>b.appendChild(r));
+[...b.rows].forEach(r=>{
+let u1=r.cells[0].firstChild,u2=r.cells[2].firstChild,n1=r.cells[1].firstChild,n2=r.cells[3].firstChild,h=r.cells[4].firstChild;
+h.value='';
+if(!u1.value&&!u2.value)return;
+if(cl(u1.value)!=cl(u2.value)){u1.classList.add('bad');u2.classList.add('bad');h.value='USER TIDAK COCOK';}
+else if(nm(n1.value)!=nm(n2.value)){n1.classList.add('bad');n2.classList.add('bad');h.value=u2.value+"\t"+n2.value;}
+else h.value='COCOK';
+});
+}
 </script></body></html>
