@@ -1,3 +1,4 @@
+
 <!DOCTYPE html><html><head><meta charset="utf-8"><title>Compare Data</title>
 <style>
 body{font-family:Calibri}table{border-collapse:collapse}th,td{border:1px solid #bbb}
@@ -12,19 +13,15 @@ for(let i=0;i<500;i++){let tr=document.createElement('tr');for(let j=0;j<6;j++){
 function c(s){return s.toLowerCase().replace(/\s+/g,'')}
 function d(v){return (v+'').replace(/\D/g,'')}
 function cmp(){
-let map=new Map();
-[...tb.rows].forEach(r=>{if(c(r.cells[2].firstChild.value))map.set(c(r.cells[2].firstChild.value),r)});
 [...tb.rows].forEach(r=>{
 r.querySelectorAll('input').forEach(i=>i.className='');
-let u=c(r.cells[0].firstChild.value),n=d(r.cells[1].firstChild.value);
+let u1=c(r.cells[0].firstChild.value),u2=c(r.cells[2].firstChild.value);
+let n1=d(r.cells[1].firstChild.value),n2=d(r.cells[3].firstChild.value);
 let h=r.cells[4].firstChild,hn=r.cells[5].firstChild;
 h.value='';hn.value='';
-if(!u)return;
-let rr=map.get(u);
-if(!rr){h.value=r.cells[0].firstChild.value;hn.value=r.cells[1].firstChild.value;r.cells[0].firstChild.className='bad';r.cells[1].firstChild.className='bad';return;}
-let n2=d(rr.cells[3].firstChild.value);
-if(n!=n2){h.value=r.cells[0].firstChild.value;hn.value=rr.cells[3].firstChild.value;r.cells[1].firstChild.className='bad';rr.cells[3].firstChild.className='bad';}
-else{h.value='OK';hn.value=rr.cells[3].firstChild.value;h.className='ok';hn.className='ok';}
+if(!u1&&!u2)return;
+if(u1===u2&&n1===n2){h.value='OK';hn.value=r.cells[3].firstChild.value;h.className='ok';hn.className='ok';}
+else{h.value=r.cells[0].firstChild.value||'TIDAK COCOK';hn.value=r.cells[3].firstChild.value;r.cells[0].firstChild.className='bad';r.cells[1].firstChild.className='bad';r.cells[2].firstChild.className='bad';r.cells[3].firstChild.className='bad';}
 });
 }
 
