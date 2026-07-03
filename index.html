@@ -295,6 +295,11 @@
       return Math.round(n).toLocaleString('en-US');
     }
 
+    function normalizeUserId(raw) {
+      if (raw === null || raw === undefined) return '';
+      return String(raw).trim().toLowerCase();
+    }
+
     function parseNominal(raw) {
       if (raw === null || raw === undefined) return '';
       let s = String(raw).trim();
@@ -371,9 +376,9 @@
     }
 
     function recomputeRow(row) {
-      const d1u = getInput(row, 'd1u')?.value.trim() || '';
+      const d1u = normalizeUserId(getInput(row, 'd1u')?.value || '');
       const d1n = getInput(row, 'd1n')?.value.trim() || '';
-      const d2u = getInput(row, 'd2u')?.value.trim() || '';
+      const d2u = normalizeUserId(getInput(row, 'd2u')?.value || '');
       const d2n = getInput(row, 'd2n')?.value.trim() || '';
 
       const ru = getResult(row, 'user');
@@ -383,8 +388,6 @@
       if (!ru || !rn || !tr) return;
 
       const allEmpty = !d1u && !d1n && !d2u && !d2n;
-      const same = d1u === d2u && d1n === d2n;
-
       if (allEmpty) {
         ru.textContent = '';
         rn.textContent = '';
@@ -392,22 +395,26 @@
         return;
       }
 
-      if (same) {
+      const userSame = d1u === d2u;
+      const nominalSame = d1n === d2n;
+
+      if (userSame) {
         ru.textContent = 'OK';
-        rn.textContent = 'OK';
-        tr.classList.remove('same');
-        return;
+      } else if (d1u && d2u) {
+        ru.textContent = `${d1u} ≠ ${d2u}`;
+      } else {
+        ru.textContent = d1u || d2u;
       }
 
-      let resultUser = '';
-      if (d1u && d2u && d1u !== d2u) resultUser = `${d1u} ≠ ${d2u}`;
-      else resultUser = d1u || d2u;
+      if (nominalSame) {
+        rn.textContent = 'OK';
+      } else {
+        const diff = toNumber(d1n) - toNumber(d2n);
+        rn.textContent = formatSigned(diff);
+      }
 
-      const diff = toNumber(d1n) - toNumber(d2n);
-
-      ru.textContent = resultUser;
-      rn.textContent = formatSigned(diff);
-      tr.classList.remove('same');
+      if (userSame && nominalSame) tr.classList.add('same');
+      else tr.classList.remove('same');
     }
 
     function recomputeAll() {
@@ -419,7 +426,7 @@
       if (input.dataset.col === 'd1n' || input.dataset.col === 'd2n') {
         input.value = parseNominal(input.value);
       } else {
-        input.value = input.value.trim();
+        input.value = normalizeUserId(input.value);
       }
     }
 
@@ -458,6 +465,7 @@
 
           let v = String(value ?? '').trim();
           if (col === 'd1n' || col === 'd2n') v = parseNominal(v);
+          else v = normalizeUserId(v);
           input.value = v;
         });
 
@@ -660,6 +668,12 @@
     body.addEventListener('input', (e) => {
       const target = e.target;
       if (!target.matches('input.cell')) return;
+
+      if (target.dataset.col === 'd1u' || target.dataset.col === 'd2u') {
+        const pos = target.selectionStart;
+        target.value = normalizeUserId(target.value);
+        try { target.setSelectionRange(pos, pos); } catch (err) {}
+      }
 
       const row = Number(target.dataset.row);
       ensureRows(row);
