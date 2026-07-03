@@ -1,65 +1,718 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TOOLS COMPARE</title>
+  <style>
+    :root {
+      --border: #c8d0dc;
+      --header: #eef3f8;
+      --header2: #e6eef7;
+      --result: #fff8dc;
+      --locked: #f4f4f4;
+      --accent: #2563eb;
+      --good: #16a34a;
+      --text: #0f172a;
+      --muted: #64748b;
+    }
 
-<!DOCTYPE html><html><head><meta charset="utf-8"><title>Compare Data</title>
-<style>
-body{font-family:Calibri}table{border-collapse:collapse}th,td{border:1px solid #bbb}
-th{background:#217346;color:#fff;padding:6px}input{border:none;padding:6px;width:140px}
-input[readonly]{background:#eee;cursor:pointer}.bad{background:#ffb3b3;animation:b .8s infinite}.ok{background:#c8f7c5}
-@keyframes b{50%{background:#fff}}
-</style></head><body><button onclick="filterData()" style="padding:10px 18px;margin:10px 0;background:#217346;color:#fff;border:none;border-radius:4px;cursor:pointer">FILTER A-Z & CEK DATA</button>
-<table><tr><th>User1</th><th>Nom1</th><th>User2</th><th>Nom2</th><th>Hasil</th><th>Nominal Hasil</th></tr><tbody id='tb'></tbody></table>
-<script>
-let tb=document.getElementById('tb');
-for(let i=0;i<500;i++){let tr=document.createElement('tr');for(let j=0;j<6;j++){let td=document.createElement('td'),x=document.createElement('input');if(j>=4){x.readOnly=true;x.onclick=()=>navigator.clipboard.writeText(x.value)}x.oninput=cmp;td.append(x);tr.append(td)}tb.append(tr)}
-function c(s){return s.toLowerCase().replace(/\s+/g,'')}
-function d(v){return (v+'').replace(/\D/g,'')}
-function cmp(){
-[...tb.rows].forEach(r=>{
-r.querySelectorAll('input').forEach(i=>i.className='');
-let u1=c(r.cells[0].firstChild.value),u2=c(r.cells[2].firstChild.value);
-let n1=d(r.cells[1].firstChild.value),n2=d(r.cells[3].firstChild.value);
-let h=r.cells[4].firstChild,hn=r.cells[5].firstChild;
-h.value='';hn.value='';
-if(!u1&&!u2)return;
-if(u1===u2&&n1===n2){h.value='OK';hn.value=r.cells[3].firstChild.value;h.className='ok';hn.className='ok';}
-else{h.value=r.cells[0].firstChild.value||'TIDAK COCOK';hn.value=r.cells[3].firstChild.value;r.cells[0].firstChild.className='bad';r.cells[1].firstChild.className='bad';r.cells[2].firstChild.className='bad';r.cells[3].firstChild.className='bad';}
-});
-}
+    * { box-sizing: border-box; }
 
-function filterData(){
- let rows=[...tb.rows];
- function sortPair(u,n){
-   let arr=rows.map(r=>({u:r.cells[u].firstChild.value.toLowerCase().trim(),nu:r.cells[u].firstChild.value,no:r.cells[n].firstChild.value}))
-               .filter(x=>x.u);
-   arr.sort((a,b)=>a.u.localeCompare(b.u));
-   rows.forEach((r,i)=>{
-      r.cells[u].firstChild.value=arr[i]?arr[i].nu:'';
-      r.cells[n].firstChild.value=arr[i]?arr[i].no:'';
-   });
-   cmp();
-}
- sortPair(0,1);
- sortPair(2,3);
-}
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f7f9fc;
+      color: var(--text);
+    }
 
-document.querySelectorAll('#tb input').forEach(inp=>{
-inp.addEventListener('paste',function(e){
-e.preventDefault();
-const text=(e.clipboardData||window.clipboardData).getData('text').replace(/\r/g,'');
-const rows=text.split('\n').filter(r=>r.length);
-const startRow=this.parentNode.parentNode.rowIndex-1;
-const startCol=this.parentNode.cellIndex;
-rows.forEach((line,r)=>{
- const cols=line.split('\t');
- cols.forEach((val,c)=>{
-   const tr=tb.rows[startRow+r];
-   if(!tr)return;
-   const cell=tr.cells[startCol+c];
-   if(!cell)return;
-   cell.firstChild.value=val;
- });
-});
-cmp();
-});
-});
+    .app {
+      max-width: 1120px;
+      margin: 18px auto;
+      padding: 0 14px 28px;
+    }
 
-</script></body></html>
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 1px solid #b6c3d6;
+      background: white;
+      border-radius: 7px;
+      padding: 8px 11px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+    }
+
+    button:hover { background: #f1f5f9; }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    button.primary:hover { filter: brightness(0.96); }
+
+    .status {
+      min-height: 22px;
+      font-size: 13px;
+      color: var(--muted);
+      margin: 7px 0 8px;
+    }
+
+    .wrap {
+      overflow: auto;
+      border: 1px solid var(--border);
+      background: white;
+      border-radius: 8px;
+      max-height: calc(100vh - 145px);
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+    }
+
+    table {
+      border-collapse: collapse;
+      width: auto;
+      min-width: 790px;
+      table-layout: fixed;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0;
+      height: 28px;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: var(--header);
+      font-size: 12px;
+      text-align: center;
+      font-weight: 800;
+      height: 31px;
+    }
+
+    thead tr.group th {
+      background: var(--header2);
+      height: 30px;
+      font-size: 13px;
+    }
+
+    .rownum {
+      width: 44px;
+      min-width: 44px;
+      text-align: center;
+      background: #f8fafc;
+      color: #64748b;
+      font-size: 12px;
+      user-select: none;
+    }
+
+    .w-user { width: 142px; min-width: 142px; }
+    .w-nom { width: 105px; min-width: 105px; }
+    .w-result-user { width: 168px; min-width: 168px; }
+    .w-result-nom { width: 115px; min-width: 115px; }
+
+    input.cell {
+      width: 100%;
+      height: 27px;
+      border: 0;
+      outline: none;
+      padding: 3px 6px;
+      font: 13px Arial, Helvetica, sans-serif;
+      background: white;
+      text-align: center;
+      vertical-align: middle;
+      font-weight: 700;
+    }
+
+    input.cell:focus {
+      box-shadow: inset 0 0 0 2px var(--accent);
+      background: #fff;
+    }
+
+    input.nominal {
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .result-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 27px;
+      padding: 3px 6px;
+      background: var(--result);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      user-select: none;
+    }
+
+    .result-nom {
+      justify-content: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .result-cell:hover {
+      outline: 2px solid #f59e0b;
+      outline-offset: -2px;
+    }
+
+    .same .result-cell {
+      background: var(--locked);
+      color: #94a3b8;
+      cursor: default;
+    }
+
+    .copied {
+      animation: flash 0.55s ease;
+    }
+
+    @keyframes flash {
+      0% { background: #bbf7d0; }
+      100% { background: var(--result); }
+    }
+
+    .note {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    kbd {
+      background: #e2e8f0;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 11px;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div>
+        <h1>TOOLS COMPARE</h1>
+        <div class="hint">
+          TOOLS COMPARE MADE BY KLV
+        </div>
+      </div>
+      <div class="buttons">
+        <button class="primary" id="sortAZ">AUTO FILTER A-Z</button>
+        <button id="copyResult">Copy Semua Result</button>
+        <button id="clearInput">Clear Input</button>
+      </div>
+    </div>
+
+    <div class="status" id="status">SEMOGA GA LELAH MENCARI SELISIH YA ABANG KAKAK!</div>
+
+    <div class="wrap">
+      <table id="sheet" aria-label="Tabel perbandingan data">
+        <thead>
+          <tr class="group">
+            <th class="rownum" rowspan="2">No</th>
+            <th colspan="2">DATA 1</th>
+            <th colspan="2">DATA 2</th>
+            <th colspan="2">RESULT / SELISIH</th>
+          </tr>
+          <tr>
+            <th class="w-user">User ID</th>
+            <th class="w-nom">Nominal</th>
+            <th class="w-user">User ID</th>
+            <th class="w-nom">Nominal</th>
+            <th class="w-result-user">User ID</th>
+            <th class="w-result-nom">Nominal</th>
+          </tr>
+        </thead>
+        <tbody id="body"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    const body = document.getElementById('body');
+    const statusEl = document.getElementById('status');
+    const sortBtn = document.getElementById('sortAZ');
+    const clearBtn = document.getElementById('clearInput');
+    const copyResultBtn = document.getElementById('copyResult');
+
+    const INPUT_COLS = ['d1u', 'd1n', 'd2u', 'd2n'];
+    let totalRows = 0;
+    let undoStack = [];
+    let redoStack = [];
+    let commitTimer = null;
+    let isApplyingState = false;
+
+    function setStatus(text, good = false) {
+      statusEl.textContent = text;
+      statusEl.style.color = good ? '#15803d' : '#64748b';
+    }
+
+    function formatNumber(num) {
+      const n = Math.abs(Number(num || 0));
+      return Math.round(n).toLocaleString('en-US');
+    }
+
+    function formatSigned(num) {
+      const n = Number(num || 0);
+      if (n < 0) return '-' + Math.abs(Math.round(n)).toLocaleString('en-US');
+      return Math.round(n).toLocaleString('en-US');
+    }
+
+    function parseNominal(raw) {
+      if (raw === null || raw === undefined) return '';
+      let s = String(raw).trim();
+      if (!s) return '';
+
+      // Buang simbol mata uang, spasi, titik/koma pemisah ribuan, tanda minus, dan kurung.
+      // Semua input nominal dibuat positif sesuai permintaan.
+      const digits = s.replace(/[^\d]/g, '');
+      if (!digits) return '';
+
+      const num = parseInt(digits, 10);
+      if (Number.isNaN(num)) return '';
+      return formatNumber(num);
+    }
+
+    function toNumber(formatted) {
+      if (formatted === null || formatted === undefined) return 0;
+      const s = String(formatted).trim();
+      if (!s) return 0;
+      const negative = /^-/.test(s);
+      const digits = s.replace(/[^\d]/g, '');
+      if (!digits) return 0;
+      const n = parseInt(digits, 10);
+      return negative ? -n : n;
+    }
+
+    function htmlEscape(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;');
+    }
+
+    function createRow(index) {
+      const tr = document.createElement('tr');
+      tr.dataset.row = index;
+
+      tr.innerHTML = `
+        <td class="rownum">${index + 1}</td>
+        <td class="w-user"><input class="cell" data-col="d1u" data-row="${index}" autocomplete="off"></td>
+        <td class="w-nom"><input class="cell nominal" data-col="d1n" data-row="${index}" autocomplete="off"></td>
+        <td class="w-user"><input class="cell" data-col="d2u" data-row="${index}" autocomplete="off"></td>
+        <td class="w-nom"><input class="cell nominal" data-col="d2n" data-row="${index}" autocomplete="off"></td>
+        <td class="w-result-user"><div class="result-cell" data-result="user" data-row="${index}" title="Klik untuk copy"></div></td>
+        <td class="w-result-nom"><div class="result-cell result-nom" data-result="nom" data-row="${index}" title="Klik untuk copy"></div></td>
+      `;
+
+      return tr;
+    }
+
+    function addRows(count) {
+      const frag = document.createDocumentFragment();
+      const start = totalRows;
+      for (let i = 0; i < count; i++) {
+        frag.appendChild(createRow(start + i));
+      }
+      body.appendChild(frag);
+      totalRows += count;
+    }
+
+    function ensureRows(requiredIndex) {
+      while (requiredIndex >= totalRows - 50) {
+        addRows(500);
+      }
+    }
+
+    function getInput(row, col) {
+      return body.querySelector(`input[data-row="${row}"][data-col="${col}"]`);
+    }
+
+    function getResult(row, type) {
+      return body.querySelector(`.result-cell[data-row="${row}"][data-result="${type}"]`);
+    }
+
+    function recomputeRow(row) {
+      const d1u = getInput(row, 'd1u')?.value.trim() || '';
+      const d1n = getInput(row, 'd1n')?.value.trim() || '';
+      const d2u = getInput(row, 'd2u')?.value.trim() || '';
+      const d2n = getInput(row, 'd2n')?.value.trim() || '';
+
+      const ru = getResult(row, 'user');
+      const rn = getResult(row, 'nom');
+      const tr = body.querySelector(`tr[data-row="${row}"]`);
+
+      if (!ru || !rn || !tr) return;
+
+      const allEmpty = !d1u && !d1n && !d2u && !d2n;
+      const same = d1u === d2u && d1n === d2n;
+
+      if (allEmpty) {
+        ru.textContent = '';
+        rn.textContent = '';
+        tr.classList.add('same');
+        return;
+      }
+
+      if (same) {
+        ru.textContent = 'OK';
+        rn.textContent = 'OK';
+        tr.classList.remove('same');
+        return;
+      }
+
+      let resultUser = '';
+      if (d1u && d2u && d1u !== d2u) resultUser = `${d1u} ≠ ${d2u}`;
+      else resultUser = d1u || d2u;
+
+      const diff = toNumber(d1n) - toNumber(d2n);
+
+      ru.textContent = resultUser;
+      rn.textContent = formatSigned(diff);
+      tr.classList.remove('same');
+    }
+
+    function recomputeAll() {
+      for (let r = 0; r < totalRows; r++) recomputeRow(r);
+    }
+
+    function normalizeCell(input) {
+      if (!input) return;
+      if (input.dataset.col === 'd1n' || input.dataset.col === 'd2n') {
+        input.value = parseNominal(input.value);
+      } else {
+        input.value = input.value.trim();
+      }
+    }
+
+    function parsePaste(text) {
+      const clean = String(text || '').replace(/\r/g, '');
+      const rawRows = clean.split('\n');
+
+      // Hapus baris kosong paling akhir dari clipboard.
+      while (rawRows.length && rawRows[rawRows.length - 1] === '') rawRows.pop();
+
+      return rawRows.map(line => {
+        if (line.includes('\t')) return line.split('\t');
+        return [line];
+      });
+    }
+
+    function pasteIntoGrid(target, text) {
+      const startRow = Number(target.dataset.row);
+      const startCol = INPUT_COLS.indexOf(target.dataset.col);
+      const grid = parsePaste(text);
+      if (startCol < 0 || !grid.length) return;
+
+      let maxRow = startRow;
+
+      grid.forEach((cells, rOffset) => {
+        const row = startRow + rOffset;
+        ensureRows(row);
+        maxRow = Math.max(maxRow, row);
+
+        cells.forEach((value, cOffset) => {
+          const colIndex = startCol + cOffset;
+          if (colIndex >= INPUT_COLS.length) return;
+          const col = INPUT_COLS[colIndex];
+          const input = getInput(row, col);
+          if (!input) return;
+
+          let v = String(value ?? '').trim();
+          if (col === 'd1n' || col === 'd2n') v = parseNominal(v);
+          input.value = v;
+        });
+
+        recomputeRow(row);
+      });
+
+      ensureRows(maxRow);
+      setStatus(`Paste masuk sampai baris ${maxRow + 1}. Total baris tersedia: ${totalRows}.`, true);
+    }
+
+    function serializeState() {
+      const rows = [];
+      for (let r = 0; r < totalRows; r++) {
+        const vals = INPUT_COLS.map(col => getInput(r, col)?.value || '');
+        if (vals.some(Boolean)) rows.push([r, ...vals]);
+      }
+      return JSON.stringify({ totalRows, rows });
+    }
+
+    function applyState(serialized) {
+      isApplyingState = true;
+      try {
+        const state = JSON.parse(serialized);
+        body.innerHTML = '';
+        totalRows = 0;
+        addRows(Math.max(500, state.totalRows || 500));
+
+        // Pastikan semua cell kosong.
+        body.querySelectorAll('input.cell').forEach(i => i.value = '');
+
+        (state.rows || []).forEach(rowData => {
+          const [row, d1u, d1n, d2u, d2n] = rowData;
+          ensureRows(row);
+          getInput(row, 'd1u').value = d1u || '';
+          getInput(row, 'd1n').value = d1n || '';
+          getInput(row, 'd2u').value = d2u || '';
+          getInput(row, 'd2n').value = d2n || '';
+        });
+
+        recomputeAll();
+      } finally {
+        isApplyingState = false;
+      }
+    }
+
+    function commitState() {
+      if (isApplyingState) return;
+      const s = serializeState();
+      if (undoStack[undoStack.length - 1] !== s) {
+        undoStack.push(s);
+        if (undoStack.length > 100) undoStack.shift();
+        redoStack = [];
+      }
+    }
+
+    function scheduleCommit() {
+      clearTimeout(commitTimer);
+      commitTimer = setTimeout(commitState, 300);
+    }
+
+    function undo() {
+      clearTimeout(commitTimer);
+      const current = serializeState();
+      const top = undoStack[undoStack.length - 1];
+
+      if (current !== top) {
+        redoStack.push(current);
+        applyState(top);
+        setStatus('Undo berhasil.', true);
+        return;
+      }
+
+      if (undoStack.length <= 1) {
+        setStatus('Tidak ada data untuk di-undo.');
+        return;
+      }
+
+      const popped = undoStack.pop();
+      redoStack.push(popped);
+      applyState(undoStack[undoStack.length - 1]);
+      setStatus('Undo berhasil.', true);
+    }
+
+    function redo() {
+      clearTimeout(commitTimer);
+      if (!redoStack.length) {
+        setStatus('Tidak ada data untuk di-redo.');
+        return;
+      }
+      const next = redoStack.pop();
+      applyState(next);
+      undoStack.push(next);
+      setStatus('Redo berhasil.', true);
+    }
+
+    function getDataBlock(prefix) {
+      const data = [];
+      for (let r = 0; r < totalRows; r++) {
+        const user = getInput(r, prefix + 'u')?.value.trim() || '';
+        const nom = getInput(r, prefix + 'n')?.value.trim() || '';
+        if (user || nom) data.push({ user, nom });
+      }
+      data.sort((a, b) => {
+        const au = a.user.toLowerCase();
+        const bu = b.user.toLowerCase();
+        if (au === bu) return toNumber(a.nom) - toNumber(b.nom);
+        return au.localeCompare(bu, 'id', { numeric: true, sensitivity: 'base' });
+      });
+      return data;
+    }
+
+    function setDataBlock(prefix, data) {
+      for (let r = 0; r < totalRows; r++) {
+        getInput(r, prefix + 'u').value = '';
+        getInput(r, prefix + 'n').value = '';
+      }
+
+      data.forEach((item, idx) => {
+        ensureRows(idx);
+        getInput(idx, prefix + 'u').value = item.user;
+        getInput(idx, prefix + 'n').value = item.nom;
+      });
+    }
+
+    function sortAZ() {
+      clearTimeout(commitTimer);
+      commitState();
+
+      const d1 = getDataBlock('d1');
+      const d2 = getDataBlock('d2');
+
+      setDataBlock('d1', d1);
+      setDataBlock('d2', d2);
+
+      recomputeAll();
+      commitState();
+      setStatus('AUTO FILTER A-Z selesai. Data 1 dan Data 2 disortir berdasarkan User ID.', true);
+    }
+
+    function clearInputs() {
+      clearTimeout(commitTimer);
+      commitState();
+
+      body.querySelectorAll('input.cell').forEach(input => input.value = '');
+      recomputeAll();
+
+      commitState();
+      setStatus('Semua input sudah dibersihkan.', true);
+    }
+
+    async function copyText(text, element) {
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (e) {
+        const area = document.createElement('textarea');
+        area.value = text;
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand('copy');
+        document.body.removeChild(area);
+      }
+
+      if (element) {
+        element.classList.remove('copied');
+        void element.offsetWidth;
+        element.classList.add('copied');
+      }
+      setStatus(`Copied: ${text}`, true);
+    }
+
+    function copyAllResult() {
+      const lines = [];
+      for (let r = 0; r < totalRows; r++) {
+        const ru = getResult(r, 'user')?.textContent || '';
+        const rn = getResult(r, 'nom')?.textContent || '';
+        if (ru || rn) lines.push(`${ru}\t${rn}`);
+      }
+      if (!lines.length) {
+        setStatus('Belum ada result yang berbeda untuk dicopy.');
+        return;
+      }
+      copyText(lines.join('\n'));
+    }
+
+    body.addEventListener('paste', (e) => {
+      const target = e.target;
+      if (!target.matches('input.cell')) return;
+
+      e.preventDefault();
+      clearTimeout(commitTimer);
+      commitState();
+
+      const text = e.clipboardData.getData('text/plain');
+      pasteIntoGrid(target, text);
+
+      commitState();
+    });
+
+    body.addEventListener('input', (e) => {
+      const target = e.target;
+      if (!target.matches('input.cell')) return;
+
+      const row = Number(target.dataset.row);
+      ensureRows(row);
+      recomputeRow(row);
+      scheduleCommit();
+    });
+
+    body.addEventListener('change', (e) => {
+      const target = e.target;
+      if (!target.matches('input.cell')) return;
+
+      normalizeCell(target);
+      recomputeRow(Number(target.dataset.row));
+      commitState();
+    });
+
+    body.addEventListener('blur', (e) => {
+      const target = e.target;
+      if (!target.matches('input.cell')) return;
+
+      normalizeCell(target);
+      recomputeRow(Number(target.dataset.row));
+      scheduleCommit();
+    }, true);
+
+    body.addEventListener('click', (e) => {
+      const target = e.target;
+      if (!target.matches('.result-cell')) return;
+      const text = target.textContent.trim();
+      if (!text) return;
+      copyText(text, target);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      const key = e.key.toLowerCase();
+      const isCtrl = e.ctrlKey || e.metaKey;
+
+      if (isCtrl && key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if ((isCtrl && key === 'y') || (isCtrl && e.shiftKey && key === 'z')) {
+        e.preventDefault();
+        redo();
+      }
+    });
+
+    sortBtn.addEventListener('click', sortAZ);
+    clearBtn.addEventListener('click', clearInputs);
+    copyResultBtn.addEventListener('click', copyAllResult);
+
+    addRows(500);
+    recomputeAll();
+    undoStack = [serializeState()];
+  </script>
+</body>
+</html>
